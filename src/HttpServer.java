@@ -1,9 +1,10 @@
-package src;
-
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 
 public class HttpServer {
 
@@ -11,6 +12,33 @@ public class HttpServer {
 
     public HttpServer(int port){
         this.port = port;
+    }
+
+    private static boolean containsHeaderEnd(byte[] data){
+        for (int i = 0; i < data.length - 3; i++){
+
+            if(
+                data[i] == '\r' &&
+                data[i+1] == '\n' &&
+                data[i+2] == '\r' &&
+                data[i+3] == '\n'
+            ){
+             return true;   
+            }
+        }
+        return false;
+    }
+
+    private static int indexOfCRLF(byte[] data){
+        for(int i = 0; i <data.length - 1;i++){
+            if(
+                data[i] == '\r' &&
+                data[i+1] == '\n'
+            ){
+                return i;
+            }
+        }
+        return -1;
     }
 
 
@@ -34,17 +62,69 @@ public class HttpServer {
 
             System.out.println("Client connected!");
 
+            InputStream in = client.getInputStream();
+
+            byte[] buf = new byte[1024];
+            ByteArrayOutputStream acc = new ByteArrayOutputStream();
+            boolean complete = false;
+
+            while(true){
+                int n = in.read(buf);
+                if(n == -1){
+                    break;
+                }
+
+                acc.write(buf, 0, n);
+                if(containsHeaderEnd(acc.toByteArray())){
+                    complete = true;
+                    break;
+                }
+
+            }
+
+            if(!complete){
+                client.close();
+                continue;
+            }
+
+            
+            byte[] raw = acc.toByteArray();
+            int lineEnd = indexOfCRLF(raw);
+
+            if(lineEnd == -1){
+                client.close();
+                continue;
+            }
+
+            String requestLine = new String(raw, 0 , lineEnd , StandardCharsets.ISO_8859_1);
+
+            String[] parts = requestLine.split(" ");
+
+            if(parts.length != 3){
+                client.close();
+                continue;
+            }
+
+            String method = parts[0];
+            String path = parts[1];
+            String version = parts[2];
+            System.out.println(method + " " + path + " " + version);
+
+
             OutputStream out = client.getOutputStream();
 
-            String body = "Hello World";
-            String response =   
-                "HTTP/1.1 200 OK\r\n" +  
-                "Content-Type: text/plain\r\n" + 
-                "Content-Length: " +  body.length() + "\r\n" + 
-                "\r\n" + 
-                body;
+            String body = "This is the path " + path;
+            byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
 
-            out.write(response.getBytes());
+            String headers =
+                "HTTP/1.1 200 OK\r\n" +
+                "Content-Type: text/plain; charset=utf-8\r\n" +
+                "Content-Length: " + bodyBytes.length + "\r\n" +
+                "Connection: close\r\n" +
+                "\r\n";
+
+            out.write(headers.getBytes(StandardCharsets.ISO_8859_1));
+            out.write(bodyBytes);
             out.flush();
 
             client.close();
