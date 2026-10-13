@@ -6,6 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import exceptions.HttpParseException;
+
 public class HttpServer {
 
     private final int port;
@@ -42,6 +44,32 @@ public class HttpServer {
     }
 
 
+    private static void sendResponse(OutputStream out, int status, String reason, String body) throws IOException{
+
+        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+
+        String headers =
+            "HTTP/1.1" + " " + status + " " + reason + "\r\n" +
+            "Content-Type: text/plain; charset=utf-8\r\n" +
+            "Content-Length: " + bodyBytes.length + "\r\n" +
+            "Connection: close\r\n" +
+            "\r\n";
+
+            out.write(headers.getBytes(StandardCharsets.ISO_8859_1));
+            out.write(bodyBytes);
+            out.flush();
+
+    }
+
+    private static String reasonFor(int status){
+        return switch(status){
+            case 200 -> "OK";
+            case 400 -> "Bad Request";
+            case 505 -> "HTTP Version Not Supported";
+            default -> "Unkown";
+        };
+    }
+
 
     public void start() throws IOException{
 
@@ -54,7 +82,7 @@ public class HttpServer {
             return;
         }
 
-            boolean isRunning = true;
+        boolean isRunning = true;
         
         while(isRunning){
 
@@ -98,38 +126,17 @@ public class HttpServer {
 
             String requestLine = new String(raw, 0 , lineEnd , StandardCharsets.ISO_8859_1);
 
-            String[] parts = requestLine.split(" ");
-
-            if(parts.length != 3){
-                client.close();
-                continue;
-            }
-
-            String method = parts[0];
-            String path = parts[1];
-            String version = parts[2];
-            System.out.println(method + " " + path + " " + version);
-
-
             OutputStream out = client.getOutputStream();
 
-            String body = "This is the path " + path;
-            byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-
-            String headers =
-                "HTTP/1.1 200 OK\r\n" +
-                "Content-Type: text/plain; charset=utf-8\r\n" +
-                "Content-Length: " + bodyBytes.length + "\r\n" +
-                "Connection: close\r\n" +
-                "\r\n";
-
-            out.write(headers.getBytes(StandardCharsets.ISO_8859_1));
-            out.write(bodyBytes);
-            out.flush();
+            try {
+                HttpRequest httpRequest = HttpRequest.parse(requestLine);
+                System.out.println(httpRequest);
+                sendResponse(out, 200, reasonFor(200), "This is the path: " + httpRequest.getTarget());
+            } catch (HttpParseException e) {
+                sendResponse(out, e.getStatusCode(), reasonFor(e.getStatusCode()), e.getMessage());
+            }
 
             client.close();
-
-
     
     }   
 
