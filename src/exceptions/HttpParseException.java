@@ -1,16 +1,18 @@
 package exceptions;
 
+import entities.StatusCodeEnum;
+
 public class HttpParseException extends RuntimeException {
 
-    private final int statusCode;
+    private final StatusCodeEnum statusCodeEnum;
 
-    public HttpParseException(int statusCode, String message){
+    public HttpParseException(StatusCodeEnum statusCodeEnum, String message){
         super(message);
-        this.statusCode = statusCode;
+        this.statusCodeEnum = statusCodeEnum;
     }
 
-    public int getStatusCode(){
-        return statusCode;
+    public StatusCodeEnum getStatusCode(){
+        return statusCodeEnum;
     }
     
 }

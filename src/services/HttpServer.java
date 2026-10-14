@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import entities.HttpRequest;
+import entities.StatusCodeEnum;
 import exceptions.HttpParseException;
 
 public class HttpServer {
@@ -46,7 +47,6 @@ public class HttpServer {
         return -1;
     }
 
-
     private static void sendResponse(OutputStream out, int status, String reason, String body) throws IOException{
 
         byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
@@ -63,16 +63,6 @@ public class HttpServer {
             out.flush();
 
     }
-
-    private static String reasonFor(int status){
-        return switch(status){
-            case 200 -> "OK";
-            case 400 -> "Bad Request";
-            case 505 -> "HTTP Version Not Supported";
-            default -> "Unkown";
-        };
-    }
-
 
     public void start() throws IOException{
 
@@ -134,11 +124,16 @@ public class HttpServer {
             try {
                 Map<String, String> headers = HttpRequestParser.parseHeaders(raw);
                 HttpRequest httpRequest = HttpRequestParser.parse(requestLine, headers);
-                System.out.println(httpRequest);
-                System.out.println(httpRequest.getHeaders());
-                sendResponse(out, 200, reasonFor(200), "This is the path: " + httpRequest.getTarget());
+                
+                if(!httpRequest.getTarget().equals("/")){
+                    sendResponse(out, StatusCodeEnum.NOT_FOUND.getCode(), StatusCodeEnum.NOT_FOUND.getReason(), "Route not found");
+                }else{
+                    sendResponse(out, StatusCodeEnum.OK.getCode(), StatusCodeEnum.OK.getReason(), "This is the path: " + httpRequest.getTarget());
+                }
             } catch (HttpParseException e) {
-                sendResponse(out, e.getStatusCode(), reasonFor(e.getStatusCode()), e.getMessage());
+                sendResponse(out, e.getStatusCode().getCode(), e.getStatusCode().getReason(), e.getMessage());
+            } catch (Exception e){
+                sendResponse(out, StatusCodeEnum.INTERNAL_SERVER_ERROR.getCode(), StatusCodeEnum.INTERNAL_SERVER_ERROR.getReason(), "Internal Server Error");
             }
 
             client.close();
