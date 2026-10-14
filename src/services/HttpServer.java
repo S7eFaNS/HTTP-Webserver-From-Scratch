@@ -1,3 +1,4 @@
+package services;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -5,7 +6,9 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
+import entities.HttpRequest;
 import exceptions.HttpParseException;
 
 public class HttpServer {
@@ -129,8 +132,10 @@ public class HttpServer {
             OutputStream out = client.getOutputStream();
 
             try {
-                HttpRequest httpRequest = HttpRequest.parse(requestLine);
+                Map<String, String> headers = HttpRequestParser.parseHeaders(raw);
+                HttpRequest httpRequest = HttpRequestParser.parse(requestLine, headers);
                 System.out.println(httpRequest);
+                System.out.println(httpRequest.getHeaders());
                 sendResponse(out, 200, reasonFor(200), "This is the path: " + httpRequest.getTarget());
             } catch (HttpParseException e) {
                 sendResponse(out, e.getStatusCode(), reasonFor(e.getStatusCode()), e.getMessage());
