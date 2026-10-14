@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+import entities.ContentType;
 import entities.HttpRequest;
 import entities.StatusCodeEnum;
 import exceptions.HttpParseException;
@@ -47,13 +48,13 @@ public class HttpServer {
         return -1;
     }
 
-    private static void sendResponse(OutputStream out, int status, String reason, String body) throws IOException{
+    private static void sendResponse(OutputStream out, int status, String reason, String body, ContentType contentType) throws IOException{
 
         byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
 
         String headers =
             "HTTP/1.1" + " " + status + " " + reason + "\r\n" +
-            "Content-Type: text/plain; charset=utf-8\r\n" +
+            "Content-Type: " + contentType.getValue() + "; charset=utf-8\r\n" +
             "Content-Length: " + bodyBytes.length + "\r\n" +
             "Connection: close\r\n" +
             "\r\n";
@@ -125,15 +126,20 @@ public class HttpServer {
                 Map<String, String> headers = HttpRequestParser.parseHeaders(raw);
                 HttpRequest httpRequest = HttpRequestParser.parse(requestLine, headers);
                 
-                if(!httpRequest.getTarget().equals("/")){
-                    sendResponse(out, StatusCodeEnum.NOT_FOUND.getCode(), StatusCodeEnum.NOT_FOUND.getReason(), "Route not found");
-                }else{
-                    sendResponse(out, StatusCodeEnum.OK.getCode(), StatusCodeEnum.OK.getReason(), "This is the path: " + httpRequest.getTarget());
+                String target = httpRequest.getTarget();
+
+                String filePath = StaticFileService.resolveFilePath(target);
+
+                if(filePath == null){
+                    sendResponse(out, StatusCodeEnum.NOT_FOUND.getCode(), StatusCodeEnum.NOT_FOUND.getReason(), "Route not found", ContentType.HTML);
+                } else{
+                    String content = StaticFileService.loadFile(filePath);
+                    sendResponse(out, StatusCodeEnum.OK.getCode(), StatusCodeEnum.OK.getReason(), content, StaticFileService.resolveContentType(filePath));
                 }
             } catch (HttpParseException e) {
-                sendResponse(out, e.getStatusCode().getCode(), e.getStatusCode().getReason(), e.getMessage());
+                sendResponse(out, e.getStatusCode().getCode(), e.getStatusCode().getReason(), e.getMessage(), ContentType.HTML);
             } catch (Exception e){
-                sendResponse(out, StatusCodeEnum.INTERNAL_SERVER_ERROR.getCode(), StatusCodeEnum.INTERNAL_SERVER_ERROR.getReason(), "Internal Server Error");
+                sendResponse(out, StatusCodeEnum.INTERNAL_SERVER_ERROR.getCode(), StatusCodeEnum.INTERNAL_SERVER_ERROR.getReason(), "Internal Server Error", ContentType.HTML);
             }
 
             client.close();
