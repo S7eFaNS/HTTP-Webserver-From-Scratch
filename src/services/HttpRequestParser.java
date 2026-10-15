@@ -2,6 +2,7 @@ package services;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 import entities.HttpMethodEnum;
 import entities.HttpRequest;
@@ -53,7 +54,7 @@ import exceptions.HttpParseException;
 
             String[] lines = request.split("\r\n");
 
-            Map<String, String> headers = new HashMap<>();
+            Map<String, String> headers = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
             for(int i = 1; i < lines.length; i++){
 

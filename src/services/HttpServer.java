@@ -48,19 +48,18 @@ public class HttpServer {
         return -1;
     }
 
-    private static void sendResponse(OutputStream out, int status, String reason, String body, ContentType contentType) throws IOException{
+    private static void sendResponse(OutputStream out, int status, String reason, byte[] body, ContentType contentType) throws IOException{
 
-        byte[] bodyBytes = body.getBytes(StandardCharsets.UTF_8);
 
         String headers =
             "HTTP/1.1" + " " + status + " " + reason + "\r\n" +
             "Content-Type: " + contentType.getValue() + "; charset=utf-8\r\n" +
-            "Content-Length: " + bodyBytes.length + "\r\n" +
+            "Content-Length: " + body.length + "\r\n" +
             "Connection: close\r\n" +
             "\r\n";
 
             out.write(headers.getBytes(StandardCharsets.ISO_8859_1));
-            out.write(bodyBytes);
+            out.write(body);
             out.flush();
 
     }
@@ -81,10 +80,20 @@ public class HttpServer {
         while(isRunning){
 
             Socket client = serverSocket.accept();
+            try (client) {
+                handleClient(client);
+            } catch (IOException e) {
+                System.out.println("Connection error: " + e.getMessage());
+            }
+        }
+    
+    }   
 
-            System.out.println("Client connected!");
+    private void handleClient(Socket client) throws IOException{
+                    
+        System.out.println("Client connected!");
 
-            InputStream in = client.getInputStream();
+        InputStream in = client.getInputStream();
 
             byte[] buf = new byte[1024];
             ByteArrayOutputStream acc = new ByteArrayOutputStream();
@@ -105,8 +114,7 @@ public class HttpServer {
             }
 
             if(!complete){
-                client.close();
-                continue;
+                return;
             }
 
             
@@ -114,8 +122,7 @@ public class HttpServer {
             int lineEnd = indexOfCRLF(raw);
 
             if(lineEnd == -1){
-                client.close();
-                continue;
+                return;
             }
 
             String requestLine = new String(raw, 0 , lineEnd , StandardCharsets.ISO_8859_1);
@@ -131,21 +138,18 @@ public class HttpServer {
                 String filePath = StaticFileService.resolveFilePath(target);
 
                 if(filePath == null){
-                    sendResponse(out, StatusCodeEnum.NOT_FOUND.getCode(), StatusCodeEnum.NOT_FOUND.getReason(), "Route not found", ContentType.HTML);
+                    sendResponse(out, StatusCodeEnum.NOT_FOUND.getCode(), StatusCodeEnum.NOT_FOUND.getReason(), "Route not found".getBytes(StandardCharsets.UTF_8), ContentType.HTML);
                 } else{
-                    String content = StaticFileService.loadFile(filePath);
+                    byte[] content = StaticFileService.loadFile(filePath);
                     sendResponse(out, StatusCodeEnum.OK.getCode(), StatusCodeEnum.OK.getReason(), content, StaticFileService.resolveContentType(filePath));
                 }
             } catch (HttpParseException e) {
-                sendResponse(out, e.getStatusCode().getCode(), e.getStatusCode().getReason(), e.getMessage(), ContentType.HTML);
+                sendResponse(out, e.getStatusCode().getCode(), e.getStatusCode().getReason(), e.getMessage().getBytes(StandardCharsets.UTF_8), ContentType.HTML);
             } catch (Exception e){
-                sendResponse(out, StatusCodeEnum.INTERNAL_SERVER_ERROR.getCode(), StatusCodeEnum.INTERNAL_SERVER_ERROR.getReason(), "Internal Server Error", ContentType.HTML);
+                sendResponse(out, StatusCodeEnum.INTERNAL_SERVER_ERROR.getCode(), StatusCodeEnum.INTERNAL_SERVER_ERROR.getReason(), "Internal Server Error".getBytes(StandardCharsets.UTF_8), ContentType.HTML);
             }
 
-            client.close();
-    
-    }   
-
     }
+    
     
 }

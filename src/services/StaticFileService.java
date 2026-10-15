@@ -21,7 +21,7 @@ public class StaticFileService {
         return staticRoutes.get(target);
     }
 
-    public static String loadFile(String path) throws IOException{
+    public static byte[] loadFile(String path) throws IOException{
 
         Path filePath = Path.of(path);
 
@@ -29,7 +29,7 @@ public class StaticFileService {
             throw new HttpParseException(StatusCodeEnum.NOT_FOUND,"Page not found");
         }
 
-        return Files.readString(filePath);
+        return Files.readAllBytes(filePath);
 
     }
 
