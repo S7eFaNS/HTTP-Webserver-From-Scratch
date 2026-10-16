@@ -1,6 +1,5 @@
 package services;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -20,7 +19,7 @@ import exceptions.HttpParseException;
             try{
                 HttpMethodEnum.valueOf(method);
             } catch(IllegalArgumentException e){
-                throw new HttpParseException(StatusCodeEnum.METHOD_NOT_ALLOWED, "Method not allowed");
+                throw new HttpParseException(StatusCodeEnum.NOT_IMPLEMENTED, "Method not implemented");
             }
         }
 
@@ -42,7 +41,24 @@ import exceptions.HttpParseException;
             
             validateMethod(parts[0]);
 
-        return new HttpRequest(parts[0], parts[1], parts[2], headers);        
+            if(!parts[1].startsWith("/")){
+                throw new HttpParseException(StatusCodeEnum.BAD_REQUEST, "Bad request");
+            }
+
+            String path;
+
+            String query;
+
+            int queryParam = parts[1].indexOf('?');
+            if(queryParam == -1){
+                 path = parts[1];
+                 query = null;
+            } else{
+                 path = parts[1].substring(0, queryParam);
+                 query = parts[1].substring(queryParam + 1);
+            }
+
+        return new HttpRequest(parts[0], parts[1], parts[2], headers, path, query);        
     }    
 
         

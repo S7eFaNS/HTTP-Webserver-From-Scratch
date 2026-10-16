@@ -8,18 +8,20 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-import entities.ContentType;
 import entities.HttpRequest;
 import entities.HttpResponse;
 import entities.StatusCodeEnum;
 import exceptions.HttpParseException;
+import handlers.Router;
 
 public class HttpServer {
 
     private final int port;
+    private final Router router;
 
-    public HttpServer(int port){
+    public HttpServer(int port, Router router){
         this.port = port;
+        this.router = router;
     }
 
     private static boolean containsHeaderEnd(byte[] data){
@@ -117,16 +119,9 @@ public class HttpServer {
             try {
                 Map<String, String> headers = HttpRequestParser.parseHeaders(raw);
                 HttpRequest httpRequest = HttpRequestParser.parse(requestLine, headers);
+
+                ResponseWriter.write(out, router.route(httpRequest), httpRequest.getMethod().equals("HEAD"));
                 
-                String target = httpRequest.getTarget();
-
-                String filePath = StaticFileService.resolveFilePath(target);
-
-                if(filePath == null){
-                    ResponseWriter.write(out, HttpResponse.text(StatusCodeEnum.NOT_FOUND, "Route not found"), false);
-                } else{
-                    byte[] content = StaticFileService.loadFile(filePath);
-                    ResponseWriter.write(out, HttpResponse.bytes(StatusCodeEnum.OK, content, StaticFileService.resolveContentType(filePath)), false);                }
             } catch (HttpParseException e) {
                 ResponseWriter.write(out, HttpResponse.text(e.getStatusCode(), e.getMessage()), false);
             } catch (Exception e){
@@ -135,5 +130,5 @@ public class HttpServer {
 
     }
     
-    
+ 
 }
