@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.util.Map;
 
+import entities.ContentType;
 import entities.HttpResponse;
 import entities.StatusCodeEnum;
 import handlers.Handler;
@@ -35,6 +36,8 @@ public class Main {
             }
             return HttpResponse.text(StatusCodeEnum.OK, sb.toString());
         });
+
+        router.register("POST", "/echo", req -> HttpResponse.bytes(StatusCodeEnum.OK, req.getBody(), ContentType.TEXT));
 
         HttpServer server = new HttpServer(8080, router);
 

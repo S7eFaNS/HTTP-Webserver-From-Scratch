@@ -9,14 +9,16 @@ public class HttpRequest {
     private final String query;
     private final String version;
     private final Map<String, String> headers;
+    private final byte[] body;
 
-    public HttpRequest(String method, String target, String version, Map<String, String> headers, String path, String query){
+    public HttpRequest(String method, String target, String version, Map<String, String> headers, String path, String query, byte[] body){
         this.method = method;
         this.target = target;
         this.version = version;
         this.headers = headers;
         this.path = path;
         this.query = query;
+        this.body = body;
     }
 
 
@@ -45,9 +47,8 @@ public class HttpRequest {
         return headers;
     }
 
-    @Override 
-    public String toString(){
-        return method + " " + target + " " + version;
+    public byte[] getBody(){
+        return body;
     }
-    
+
 }
