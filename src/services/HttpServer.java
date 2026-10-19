@@ -13,6 +13,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import entities.HttpRequest;
 import entities.HttpResponse;
@@ -25,10 +26,13 @@ public class HttpServer {
     private final int port;
     private final Router router;
     private final ExecutorService threadPool;
+    private volatile boolean running;
+    private ServerSocket serverSocket;
 
     public HttpServer(int port, Router router){
         this.port = port;
         this.router = router;
+        this.running = true;
         this.threadPool = Executors.newFixedThreadPool(20);
     }
 
@@ -163,9 +167,6 @@ public class HttpServer {
 
 
     public void start() throws IOException{
-
-        ServerSocket serverSocket;
-
         try{
             serverSocket = new ServerSocket(port);
         } catch (IOException e){
@@ -173,28 +174,58 @@ public class HttpServer {
             return;
         }
 
-        boolean isRunning = true;
-        
-        while(isRunning){
+        while(running){
 
-            Socket client = serverSocket.accept();
+            try{
+                Socket client = serverSocket.accept();
 
-            threadPool.submit(() -> {
-            
-                try (client) {
-            
-                    handleClient(client);
-            
-                } catch (IOException e) {
-            
-                    System.out.println("Connection error: " + e.getMessage());
-            
+                threadPool.submit(() -> {
+                
+                    try (client) {
+                
+                        handleClient(client);
+                
+                    } catch (IOException e) {
+                
+                        System.out.println("Connection error: " + e.getMessage());
+                
+                    }
+                });
+            } catch(IOException e){
+                if(running) {
+                    System.out.println(
+                        "Accept failed: "
+                        + e.getMessage()
+                    );
                 }
-            });
-            
+            }
+                  
         }
     
     }   
+
+    public void stop(){
+        running = false;
+
+        try {
+            if(serverSocket != null){
+                serverSocket.close();
+            }
+        } catch (Exception e) {
+            System.out.println("Error while closing server socket");
+        }
+
+        threadPool.shutdown();
+        try {
+            if(!threadPool.awaitTermination(30, TimeUnit.SECONDS)){
+                threadPool.shutdownNow();
+            }            
+        } catch (InterruptedException e) {
+            threadPool.shutdownNow();
+            
+            Thread.currentThread().interrupt();
+        }
+    }
 
     private void handleClient(Socket client) throws IOException{
                     
