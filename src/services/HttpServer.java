@@ -11,6 +11,8 @@ import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import entities.HttpRequest;
 import entities.HttpResponse;
@@ -22,10 +24,12 @@ public class HttpServer {
 
     private final int port;
     private final Router router;
+    private final ExecutorService threadPool;
 
     public HttpServer(int port, Router router){
         this.port = port;
         this.router = router;
+        this.threadPool = Executors.newFixedThreadPool(20);
     }
 
     private static int indexOfHeaderEnd(byte[] data){
@@ -152,8 +156,11 @@ public class HttpServer {
         
         }
         return body.toByteArray();
-
     }
+
+
+
+
 
     public void start() throws IOException{
 
@@ -171,11 +178,20 @@ public class HttpServer {
         while(isRunning){
 
             Socket client = serverSocket.accept();
-            try (client) {
-                handleClient(client);
-            } catch (IOException e) {
-                System.out.println("Connection error: " + e.getMessage());
-            }
+
+            threadPool.submit(() -> {
+            
+                try (client) {
+            
+                    handleClient(client);
+            
+                } catch (IOException e) {
+            
+                    System.out.println("Connection error: " + e.getMessage());
+            
+                }
+            });
+            
         }
     
     }   
