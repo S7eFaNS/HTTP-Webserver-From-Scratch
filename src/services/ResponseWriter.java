@@ -26,7 +26,6 @@ public class ResponseWriter {
         }
 
         head.append("Content-Length: ").append(body.length).append("\r\n");
-        head.append("Connection: close\r\n");
         head.append("\r\n");
         
         out.write(head.toString().getBytes(StandardCharsets.ISO_8859_1));

@@ -165,6 +165,14 @@ public class HttpServer {
 
 
 
+    private boolean shouldClose(HttpRequest request){
+        String connection = request.getHeaders().get("Connection");
+
+        return "close".equalsIgnoreCase(connection);
+    }
+
+
+
 
     public void start() throws IOException{
         try{
@@ -233,49 +241,56 @@ public class HttpServer {
 
         client.setSoTimeout(10000);
 
-        InputStream in = client.getInputStream();
-
-            byte[] buf = new byte[1024];
-            ByteArrayOutputStream acc = new ByteArrayOutputStream();
-            int indexOfBody = 0;
-
-            while(true){
-                int n = in.read(buf);
-                if(n == -1){
-                    break;
-                }
-
-                acc.write(buf, 0, n);
-                indexOfBody = indexOfHeaderEnd(acc.toByteArray());
-                if(indexOfBody != -1){
-                    break;
-                }
-
-            }
-
-            if(indexOfBody == -1){
-                return;
-            }
-
-            
-            byte[] raw = acc.toByteArray();
-            int lineEnd = indexOfCRLF(raw);
-
-            if(lineEnd == -1){
-                return;
-            }
-
-            String requestLine = new String(raw, 0 , lineEnd , StandardCharsets.ISO_8859_1);
-            String requestHeader = new String(raw, 0, indexOfBody, StandardCharsets.ISO_8859_1);
-            byte[] alreadyRead = Arrays.copyOfRange(raw, indexOfBody + 4, raw.length); 
-
+        while(true){
             OutputStream out = client.getOutputStream();
+            
+            try{
+                InputStream in = client.getInputStream();
 
-            try {
+                byte[] buf = new byte[1024];
+                ByteArrayOutputStream acc = new ByteArrayOutputStream();
+                int indexOfBody = 0;
+
+                while(true){
+                    int n = in.read(buf);
+                    if(n == -1){
+                        break;
+                    }
+
+                    acc.write(buf, 0, n);
+                    indexOfBody = indexOfHeaderEnd(acc.toByteArray());
+                    if(indexOfBody != -1){
+                        break;
+                    }
+
+                }
+
+                if(indexOfBody == -1){
+                    System.out.println("Client closed connection");
+                    return;
+                }
+
+                
+                byte[] raw = acc.toByteArray();
+                int lineEnd = indexOfCRLF(raw);
+
+                if(lineEnd == -1){
+                    return;
+                }
+            
+                //DEBUGGING FEATURES
+                System.out.println("New request");
+                System.out.println("Thread: " + Thread.currentThread().getName());
+
+                String requestLine = new String(raw, 0 , lineEnd , StandardCharsets.ISO_8859_1);
+                String requestHeader = new String(raw, 0, indexOfBody, StandardCharsets.ISO_8859_1);
+                byte[] alreadyRead = Arrays.copyOfRange(raw, indexOfBody + 4, raw.length); 
+
+
                 HttpRequestParser.validateRequestLine(requestLine);
 
                 Map<String, String> headers = HttpRequestParser.parseHeaders(requestHeader);
-                
+                    
                 int parsedContentLength = HttpRequestParser.parseContentLength(headers);
 
                 byte[] body;
@@ -288,16 +303,39 @@ public class HttpServer {
 
                 HttpRequest httpRequest = HttpRequestParser.parse(requestLine, headers, body);
 
-                ResponseWriter.write(out, router.route(httpRequest), httpRequest.getMethod().equals("HEAD"));
+                //DEBUGGING FEATURE
+                System.out.println(
+                    "Parsed: "
+                    + httpRequest.getMethod()
+                    + " "
+                    + httpRequest.getPath()
+                );
                 
+                boolean close = shouldClose(httpRequest);
+
+                HttpResponse response = router.route(httpRequest);
+
+                if(close){
+                    response.setHeader("Connection", "close");
+                } else {
+                    response.setHeader("Connection", "keep-alive");
+                }
+
+                ResponseWriter.write(out, response, httpRequest.getMethod().equals("HEAD"));
+
+                if(close){
+                    System.out.println("Connection closed");
+                    break;
+                }
             } catch (HttpParseException e) {
                 ResponseWriter.write(out, HttpResponse.text(e.getStatusCode(), e.getMessage()), false);
             } catch(SocketTimeoutException e){
-                ResponseWriter.write(out, HttpResponse.text(StatusCodeEnum.REQUEST_TIMEOUT, "Request Timeout"), false);
+                System.out.println("Keep-alive timeout");
+                break;
             } catch (Exception e){
-                ResponseWriter.write(out,  HttpResponse.text(StatusCodeEnum.INTERNAL_SERVER_ERROR, "Internal Server Error"), false);
+                    ResponseWriter.write(out,  HttpResponse.text(StatusCodeEnum.INTERNAL_SERVER_ERROR, "Internal Server Error"), false);
             }
-
+        }
     }
     
  
