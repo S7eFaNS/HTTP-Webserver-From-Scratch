@@ -1,4 +1,4 @@
-package handlers;
+package framework.handlers;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -6,9 +6,9 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import entities.HttpResponse;
-import entities.StatusCodeEnum;
-import entities.HttpRequest;
+import framework.entities.HttpRequest;
+import framework.entities.HttpResponse;
+import framework.entities.StatusCodeEnum;
 
 
 public class Router {

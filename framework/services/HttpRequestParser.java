@@ -1,12 +1,11 @@
-package services;
-import java.nio.charset.StandardCharsets;
+package framework.services;
 import java.util.Map;
 import java.util.TreeMap;
 
-import entities.HttpMethodEnum;
-import entities.HttpRequest;
-import entities.StatusCodeEnum;
-import exceptions.HttpParseException;
+import framework.entities.HttpMethodEnum;
+import framework.entities.HttpRequest;
+import framework.entities.StatusCodeEnum;
+import framework.exceptions.HttpParseException;
 
     public class HttpRequestParser {
 

@@ -1,6 +1,6 @@
-package exceptions;
+package framework.exceptions;
 
-import entities.StatusCodeEnum;
+import framework.entities.StatusCodeEnum;
 
 public class HttpParseException extends RuntimeException {
 

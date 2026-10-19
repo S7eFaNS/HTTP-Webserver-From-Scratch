@@ -1,11 +1,11 @@
-package handlers;
+package framework.handlers;
 
 import java.io.IOException;
 
-import entities.HttpRequest;
-import entities.HttpResponse;
-import entities.StatusCodeEnum;
-import services.StaticFileService;
+import framework.entities.HttpRequest;
+import framework.entities.HttpResponse;
+import framework.entities.StatusCodeEnum;
+import framework.services.StaticFileService;
 
 public class StaticFileHandler implements Handler{
 

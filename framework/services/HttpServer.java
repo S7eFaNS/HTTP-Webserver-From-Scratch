@@ -1,4 +1,4 @@
-package services;
+package framework.services;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,11 +15,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import entities.HttpRequest;
-import entities.HttpResponse;
-import entities.StatusCodeEnum;
-import exceptions.HttpParseException;
-import handlers.Router;
+import framework.entities.HttpRequest;
+import framework.entities.HttpResponse;
+import framework.entities.StatusCodeEnum;
+import framework.exceptions.HttpParseException;
+import framework.handlers.Router;
 
 public class HttpServer {
 

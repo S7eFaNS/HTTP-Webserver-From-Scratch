@@ -1,13 +1,13 @@
 import java.io.IOException;
 import java.util.Map;
 
-import entities.ContentType;
-import entities.HttpResponse;
-import entities.StatusCodeEnum;
-import handlers.Handler;
-import handlers.Router;
-import handlers.StaticFileHandler;
-import services.HttpServer;
+import framework.entities.ContentType;
+import framework.entities.HttpResponse;
+import framework.entities.StatusCodeEnum;
+import framework.handlers.Handler;
+import framework.handlers.Router;
+import framework.handlers.StaticFileHandler;
+import framework.services.HttpServer;
 
 public class Main {
 

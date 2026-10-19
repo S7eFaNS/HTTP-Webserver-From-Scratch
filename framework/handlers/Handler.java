@@ -1,9 +1,9 @@
-package handlers;
+package framework.handlers;
 
 import java.io.IOException;
 
-import entities.HttpRequest;
-import entities.HttpResponse;
+import framework.entities.HttpRequest;
+import framework.entities.HttpResponse;
 
 @FunctionalInterface 
 public interface Handler {

@@ -1,4 +1,4 @@
-package entities;
+package framework.entities;
 import java.util.Map;
 
 public class HttpRequest {

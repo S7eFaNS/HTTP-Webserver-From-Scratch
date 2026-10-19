@@ -1,13 +1,13 @@
-package services;
+package framework.services;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-import entities.ContentType;
-import entities.StatusCodeEnum;
-import exceptions.HttpParseException;
+import framework.entities.ContentType;
+import framework.entities.StatusCodeEnum;
+import framework.exceptions.HttpParseException;
 
 public class StaticFileService {
 

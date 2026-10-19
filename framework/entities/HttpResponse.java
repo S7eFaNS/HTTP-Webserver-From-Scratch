@@ -1,4 +1,4 @@
-package entities;
+package framework.entities;
 
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;

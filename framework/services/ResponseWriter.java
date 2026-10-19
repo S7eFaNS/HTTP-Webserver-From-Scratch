@@ -1,12 +1,12 @@
-package services;
+package framework.services;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import entities.HttpResponse;
-import entities.StatusCodeEnum;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
+import framework.entities.HttpResponse;
+import framework.entities.StatusCodeEnum;
 
 public class ResponseWriter {
 
