@@ -2,6 +2,7 @@ package growth_tracker.controllers;
 
 import java.util.List;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import framework.entities.HttpRequest;
@@ -9,6 +10,7 @@ import framework.entities.HttpResponse;
 import framework.entities.StatusCodeEnum;
 import framework.exceptions.HttpParseException;
 import framework.handlers.Router;
+import framework.handlers.StaticFileHandler;
 import growth_tracker.controllers.interfaces.IGoalController;
 import growth_tracker.dtos.CreateGoalRequest;
 import growth_tracker.dtos.GoalResponse;
@@ -21,12 +23,17 @@ public class GoalController implements IGoalController{
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private final StaticFileHandler fileHandler = new StaticFileHandler();
+
     public GoalController(IGoalService service){
         this.service = service;
     }
 
     @Override 
     public void registerRoutes(Router router){
+        router.register("GET", "/", fileHandler);
+        router.register("GET", "/app.js", fileHandler);
+        router.register("GET", "/style.css", fileHandler);
         router.register("GET", "/goals", this::getAllGoals);
         router.register("GET", "/goal", this::getGoalById);
         router.register("DELETE", "/goal", this::deleteGoalById);
@@ -34,12 +41,16 @@ public class GoalController implements IGoalController{
     }
 
     private HttpResponse getAllGoals(HttpRequest request){
-        List<GoalResponse> responses = service.getAllGoals()
-                        .stream()
-                        .map(goal -> new GoalResponse(goal.getId(), goal.getTitle(), goal.getDailyTarget(), goal.getCreatedAt()))
-                        .toList();
+        try {
+            List<GoalResponse> responses = service.getAllGoals()
+                            .stream()
+                            .map(goal -> new GoalResponse(goal.getId(), goal.getTitle(), goal.getDailyTarget(), goal.getCreatedAt()))
+                            .toList();
 
-        return HttpResponse.text(StatusCodeEnum.OK, responses.toString());
+            return HttpResponse.text(StatusCodeEnum.OK, objectMapper.writeValueAsString(responses));
+        } catch (Exception e) {
+            return HttpResponse.text(StatusCodeEnum.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
     private HttpResponse getGoalById(HttpRequest request){
@@ -50,10 +61,12 @@ public class GoalController implements IGoalController{
 
             GoalResponse response = new GoalResponse(goal.getId(), goal.getTitle(), goal.getDailyTarget(), goal.getCreatedAt());
 
-            return HttpResponse.text(StatusCodeEnum.OK, response.toString());
+            return HttpResponse.text(StatusCodeEnum.OK, objectMapper.writeValueAsString(response));
         } catch (IllegalArgumentException e) {
             return HttpResponse.text(StatusCodeEnum.NOT_FOUND, e.getMessage());
-        }
+        } catch (Exception e) {
+        return HttpResponse.text(StatusCodeEnum.INTERNAL_SERVER_ERROR, e.getMessage());
+    }
         
     }
 
@@ -78,8 +91,8 @@ public class GoalController implements IGoalController{
 
             service.saveGoal(goalCreation.getTitle(), goalCreation.getDailyTarget());
             return HttpResponse.text(StatusCodeEnum.OK, "Goal was created");
-        } catch (Exception e) {
-            return HttpResponse.text(StatusCodeEnum.BAD_REQUEST, e.getMessage());
+        } catch (JsonProcessingException e) {
+            return HttpResponse.text(StatusCodeEnum.BAD_REQUEST,"Invalid JSON request");
         }
     }
 

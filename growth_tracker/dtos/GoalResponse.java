@@ -7,13 +7,13 @@ public class GoalResponse {
     private int id;
     private String title;
     private String dailyTarget;
-    private LocalDateTime createdAt;
+    private String createdAt;
 
     public GoalResponse(int id, String title, String dailyTarget, LocalDateTime createdAt) {
         this.id = id;
         this.title = title;
         this.dailyTarget = dailyTarget;
-        this.createdAt = createdAt;
+        this.createdAt = createdAt.toString();
     }
 
     public int getId() {
@@ -28,7 +28,7 @@ public class GoalResponse {
         return dailyTarget;
     }
 
-    public LocalDateTime getCreatedAt() {
+    public String getCreatedAt() {
         return createdAt;
     }
 

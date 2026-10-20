@@ -3,25 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Java HTTP Server</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Growth Tracker</title>
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body>
 
     <div class="container">
-        <h1>My HTTP Server Works!</h1>
 
-        <p>
-            This page is served from my custom Java web server.
-        </p>
+        <header>
+            <h1>🎯 Growth Tracker</h1>
+            <p>Track your daily goals and stay consistent.</p>
+        </header>
 
-        <button id="btn">
-            Click Me
-        </button>
+        <section class="panel">
 
-        <p id="message"></p>
+            <h2>Create Goal</h2>
+
+            <form id="goal-form">
+
+                <input
+                    id="title"
+                    placeholder="Goal title"
+                    required
+                >
+
+                <input
+                    id="dailyTarget"
+                    placeholder="Daily target"
+                    required
+                >
+
+                <button type="submit">
+                    Add Goal
+                </button>
+
+            </form>
+
+        </section>
+
+        <section class="panel">
+
+            <h2>Find Goal By ID</h2>
+
+            <div class="search-row">
+
+                <input
+                    id="goalId"
+                    type="number"
+                    placeholder="Goal ID"
+                >
+
+                <button id="findBtn">
+                    Search
+                </button>
+
+            </div>
+
+            <div id="goal-details"></div>
+
+        </section>
+
+        <section>
+
+            <h2>Your Goals</h2>
+
+            <div id="goals"></div>
+
+        </section>
+
     </div>
 
-    <script src="app.js"></script>
+    <script src="/app.js"></script>
+
 </body>
 </html>
