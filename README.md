@@ -1,6 +1,6 @@
 # HTTP Server from Scratch in Java
 
-An HTTP/1.1 server written in plain Java on top of raw TCP sockets. It uses no frameworks, no `com.sun.net.httpserver`, no Spring, no Netty, just `ServerSocket`, byte streams and the HTTP spec.
+An HTTP/1.1 server written in plain Java on top of raw TCP sockets. It uses no frameworks, no `com.sun.net.httpserver`, no Spring, no Netty, just `ServerSocket`, byte streams and the HTTP spec. Used RFC 2616 as reference
 
 To show it working with a real browser, the repo also includes a small CRUD app called **Growth Tracker**: a static HTML/JS frontend plus a JSON API backed by PostgreSQL. The app exists to exercise the server. The server is the main part of the project. AI was used to help me research and fix bugs or fill in gaps in my knowledge and understand things under the hood better. 
 
