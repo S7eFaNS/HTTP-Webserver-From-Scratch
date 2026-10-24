@@ -21,6 +21,13 @@ public class Main {
         controller.registerRoutes(router);
 
         HttpServer server = new HttpServer(8080, router);
+
+        Runtime.getRuntime().addShutdownHook(
+            new Thread(()-> {
+                System.out.println("Server is shutting down");
+                server.stop();
+            })
+        );
         
         System.out.println("Server is running...");
         try{
@@ -29,12 +36,6 @@ public class Main {
             System.out.println("Error: " + e.getMessage());
         }
         
-        Runtime.getRuntime().addShutdownHook(
-            new Thread(()-> {
-                System.out.println("Server is shutting down");
-                server.stop();
-            })
-        );
     }
 
 }

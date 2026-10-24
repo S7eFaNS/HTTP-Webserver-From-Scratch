@@ -1,5 +1,6 @@
 package growth_tracker.controllers;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -85,7 +86,7 @@ public class GoalController implements IGoalController{
     private HttpResponse createGoal(HttpRequest request){
         
         try {
-            String body = new String(request.getBody());
+            String body = new String(request.getBody(), StandardCharsets.UTF_8);
 
             CreateGoalRequest goalCreation = objectMapper.readValue(body, CreateGoalRequest.class);
 
