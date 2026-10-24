@@ -1,21 +1,36 @@
 services:
   postgres:
     image: postgres:16
-
     container_name: growth-tracker-db
-
     environment:
       POSTGRES_DB: growth_tracker
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-
     ports:
       - "5432:5432"
-
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d growth_tracker"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
 
+  app:
+    build: .
+    container_name: growth-tracker-app
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/growth_tracker
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    stop_grace_period: 35s
     restart: unless-stopped
 
 volumes:
