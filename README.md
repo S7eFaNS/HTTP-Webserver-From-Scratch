@@ -43,6 +43,39 @@ ResponseWriter    writes status line + headers + body back to the socket
 
 The connection then stays open for the next request (keep-alive) unless the client asked to close it.
 
+```mermaid
+flowchart LR
+    Browser[Browser]
+
+    subgraph HTTP Framework
+        HttpServer
+        Parser[HttpRequestParser]
+        Router
+        Writer[ResponseWriter]
+    end
+
+    subgraph Application
+        Controller[GoalController]
+        Service[GoalService]
+        Repository[GoalRepository]
+    end
+
+    subgraph Storage
+        DB[(PostgreSQL)]
+    end
+
+    Browser --> HttpServer
+    HttpServer --> Parser
+    Parser --> Router
+    Router --> Controller
+    Controller --> Service
+    Service --> Repository
+    Repository --> DB
+
+    Controller --> Writer
+    Writer --> Browser
+```
+
 ## Features
 
 **Core HTTP**
